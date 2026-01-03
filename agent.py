@@ -1,6 +1,7 @@
 import torch
 import random
 import numpy as np
+import os
 from collections import deque
 from game import SnakeGameAI, Direction, Point
 from model import Linear_QNet, QTrainer
@@ -20,6 +21,12 @@ class Agent:
         self.model = Linear_QNet(11, 256, 3) # 11 inputs, 256 hidden, 3 outputs
         self.trainer = QTrainer(self.model, lr=LR, gamma=self.gamma)
 
+        # Resume training rather than start form scratch
+        if os.path.exists('./model/model.pth'):
+            self.model.load_state_dict(torch.load('./model/model.pth'))
+            self.model.eval() # Set to evaluation mode
+            self.n_games = 100 # Trick to disable random exploration immediately
+            print(">> MODEL LOADED! Resuming with smart brain.")
 
     def get_state(self, game):
         head = game.snake[0]
