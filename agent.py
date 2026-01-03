@@ -22,8 +22,8 @@ class Agent:
         self.trainer = QTrainer(self.model, lr=LR, gamma=self.gamma)
 
         # Resume training rather than start form scratch
-        if os.path.exists('./model/model.pth'):
-            self.model.load_state_dict(torch.load('./model/model.pth'))
+        if os.path.exists('./models/model.pth'):
+            self.model.load_state_dict(torch.load('./models/model.pth'))
             self.model.eval() # Set to evaluation mode
             self.n_games = 100 # Trick to disable random exploration immediately
             print(">> MODEL LOADED! Resuming with smart brain.")

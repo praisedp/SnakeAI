@@ -21,7 +21,7 @@ class Linear_QNet(nn.Module):
 
     def save(self, file_name='model.pth'):
         # Create a folder to save the model if it doesn't exist
-        model_folder_path = './model'
+        model_folder_path = './models'
         if not os.path.exists(model_folder_path):
             os.makedirs(model_folder_path)
 
