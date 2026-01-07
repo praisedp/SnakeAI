@@ -32,5 +32,5 @@ htmlcov/
 
 # --- Project artifacts (ML) ---
 # If you want to version your trained model, remove these lines.
-model/*.pth
+models/*.pth
 *.pth
