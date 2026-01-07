@@ -25,11 +25,11 @@ BLUE2 = (255, 255, 255)
 BLACK = (0, 0, 0)
 
 BLOCK_SIZE = 20
-SPEED = 20  # Keep arround 20 for human viewing
+SPEED = 3000  # Keep arround 20 for human viewing
 
 class SnakeGameAI:
 
-    def __init__(self, w=640, h=480):
+    def __init__(self, w=900, h=880):
         self.w = w
         self.h = h
         self.blockSize = BLOCK_SIZE
@@ -45,7 +45,9 @@ class SnakeGameAI:
         self.direction = Direction.RIGHT
 
         # Snake starts in the middle with 3 blocks
-        self.head = Point(self.w/2, self.h/2)
+        x = (self.w // 2 // BLOCK_SIZE) * BLOCK_SIZE
+        y = (self.h // 2 // BLOCK_SIZE) * BLOCK_SIZE
+        self.head = Point(x, y)
         self.snake = [self.head,
                       Point(self.head.x-BLOCK_SIZE, self.head.y),
                       Point(self.head.x-(2*BLOCK_SIZE), self.head.y)]

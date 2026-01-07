@@ -25,14 +25,14 @@ class Agent:
         self.memory = deque(maxlen=MAX_MEMORY)
 
         # 30 inputs: 24 ray vision + 4 direction + 2 food direction
-        self.model = Linear_QNet(30, 256, 3)
+        self.model = Linear_QNet(39, 256, 3)
         self.trainer = QTrainer(self.model, lr=LR, gamma=self.gamma)
 
           # Resume training rather than start form scratch
         if os.path.exists('./models/model.pth'):
             self.model.load_state_dict(torch.load('./models/model.pth'))
             self.model.eval() # Set to evaluation mode
-            self.n_games = 200 # Trick to disable random exploration immediately
+            self.n_games = 0 # Trick to disable random exploration immediately
             print(">> MODEL LOADED! Resuming with smart brain.")
 
    # --------------------------------------------------
@@ -44,6 +44,7 @@ class Agent:
 
         food_signal = 0.0
         body_signal = 0.0
+        decay_signal = 0.0
 
         # Correct max distance (grid-based, not diagonal)
         max_dist = max(
@@ -70,7 +71,29 @@ class Agent:
 
             # Body detection (closest wins)
             if current in game.snake:
-                body_signal = max(body_signal, log_proximity)
+                if log_proximity > body_signal:
+                    body_signal = log_proximity
+
+                # Find which index this body part is.
+                # game.snake[0] is Head, game.snake[-1] is Tail.
+                try:
+                    idx = game.snake.index(current)
+                    length = len(game.snake)
+                    
+                    if length > 1:
+                        # Calculate Danger:
+                        # 1.0 = Head (Stays forever - HIGH DANGER)
+                        # 0.0 = Tail (Leaves now - LOW DANGER)
+                        # We use '1 -' because we want Head to be the big number.
+                        segment_danger = 1 - (idx / (length - 1))
+                        
+                        # We take the MAX. If a ray hits a Safe Tail (0.0) 
+                        # and a Dangerous Head (1.0), the result is 1.0 (DANGER).
+                        decay_signal = max(decay_signal, segment_danger)
+                    else:
+                        decay_signal = 1.0 # Length 1 is always maximum danger
+                except:
+                    pass
 
             # Food detection (closest wins)
             if current == game.food:
@@ -80,7 +103,7 @@ class Agent:
         wall_signal = 1 - (np.log(distance + 1) / log_max)
         wall_signal = max(0.0, wall_signal)
 
-        return [wall_signal, body_signal, food_signal]
+        return [wall_signal, body_signal, food_signal, decay_signal]
 
 
     # --------------------------------------------------
@@ -171,6 +194,10 @@ class Agent:
             np.sign(rel_food_right)
         ])
 
+        # 4. NEW: Global Normalized Length (1 Input)
+        norm_len = len(game.snake) / ( (game.w/game.blockSize) * (game.h/game.blockSize) )
+        state.extend([norm_len])
+
         return np.array(state, dtype=float)
     # --------------------------------------------------
     # Memory
@@ -202,7 +229,7 @@ class Agent:
 
         # The Random factor
         if self.epsilon < 10: 
-            self.epsilon = 0 # Keep it fixed at like 10
+            self.epsilon = 10 # Keep it fixed at like 10
 
         if random.randint(0, 200) < self.epsilon:
             move = random.randint(0, 2)
