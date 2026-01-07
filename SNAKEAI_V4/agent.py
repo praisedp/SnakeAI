@@ -71,29 +71,15 @@ class Agent:
 
             # Body detection (closest wins)
             if current in game.snake:
-                if log_proximity > body_signal:
-                    body_signal = log_proximity
+                idx = game.snake.index(current)
+                length = len(game.snake)
 
-                # Find which index this body part is.
-                # game.snake[0] is Head, game.snake[-1] is Tail.
-                try:
-                    idx = game.snake.index(current)
-                    length = len(game.snake)
-                    
-                    if length > 1:
-                        # Calculate Danger:
-                        # 1.0 = Head (Stays forever - HIGH DANGER)
-                        # 0.0 = Tail (Leaves now - LOW DANGER)
-                        # We use '1 -' because we want Head to be the big number.
-                        segment_danger = 1 - (idx / (length - 1))
-                        
-                        # We take the MAX. If a ray hits a Safe Tail (0.0) 
-                        # and a Dangerous Head (1.0), the result is 1.0 (DANGER).
-                        decay_signal = max(decay_signal, segment_danger)
-                    else:
-                        decay_signal = 1.0 # Length 1 is always maximum danger
-                except:
-                    pass
+                body_signal = max(body_signal, log_proximity)
+
+                if length > 1:
+                    time_to_clear = idx / (length - 1)   # 0=head, 1=tail
+                    decay_signal = max(decay_signal, time_to_clear)
+
 
             # Food detection (closest wins)
             if current == game.food:

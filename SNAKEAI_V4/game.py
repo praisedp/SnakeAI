@@ -81,7 +81,7 @@ class SnakeGameAI:
         self.snake.insert(0, self.head)
 
         # 3. Check if game over
-        reward = -0.005
+        reward = -0.002
         game_over = False
         
         # If collision OR if nothing happens for too long (starvation)
@@ -93,7 +93,7 @@ class SnakeGameAI:
         # 4. Place new food or just move
         if self.head == self.food:
             self.score += 1
-            reward = 10
+            reward = 15
             self._place_food()
         else:
             self.snake.pop() # Remove the tail (movement simulation)

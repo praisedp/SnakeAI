@@ -14,6 +14,8 @@ MAX_MEMORY = 100_000
 BATCH_SIZE = 1000
 LR = 0.001
 
+# NOTE: consider number of self.n_games in init and self.epsilon
+
 class Agent:
 
     def __init__(self):
@@ -31,7 +33,7 @@ class Agent:
         if os.path.exists('./models/model.pth'):
             self.model.load_state_dict(torch.load('./models/model.pth'))
             self.model.eval() # Set to evaluation mode
-            self.n_games = 200 # Trick to disable random exploration immediately
+            self.n_games = 0 # Trick to disable random exploration immediately
             print(">> MODEL LOADED! Resuming with smart brain.")
 
    # --------------------------------------------------
@@ -201,7 +203,9 @@ class Agent:
 
         # The Random factor
         if self.epsilon < 10: 
-            self.epsilon = 0 # Keep it fixed at like 10
+            self.epsilon = 10 # Keep it fixed at like 10
+        
+        self.epsilon = 0 # for testing
 
         if random.randint(0, 200) < self.epsilon:
             move = random.randint(0, 2)
