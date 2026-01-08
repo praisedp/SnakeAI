@@ -33,7 +33,7 @@ class Agent:
         if os.path.exists('./models/model.pth'):
             self.model.load_state_dict(torch.load('./models/model.pth'))
             self.model.eval() # Set to evaluation mode
-            self.n_games = 0 # Trick to disable random exploration immediately
+            self.n_games = 300 # Trick to disable random exploration immediately
             print(">> MODEL LOADED! Resuming with smart brain.")
 
    # --------------------------------------------------
@@ -198,12 +198,11 @@ class Agent:
     # Action selection (ε-greedy)
     # --------------------------------------------------
     def get_action(self, state):
-        self.epsilon = 200 - self.n_games
+        self.epsilon = max(10, 300 - self.n_games)
+
         final_move = [0, 0, 0]
 
-        # The Random factor
-        if self.epsilon < 10: 
-            self.epsilon = 10 # Keep it fixed at like 10
+
         
         # self.epsilon = 0 # for testing
 
