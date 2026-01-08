@@ -20,18 +20,19 @@ Point = namedtuple('Point', 'x, y')
 # RGB Colors
 WHITE = (255, 255, 255)
 RED = (200, 0, 0)
-BLUE1 = (0, 0, 255)
-BLUE2 = (0, 100, 255)
+BLUE1 = (255, 255, 255)
+BLUE2 = (255, 255, 255)
 BLACK = (0, 0, 0)
 
 BLOCK_SIZE = 20
-SPEED = 30  # Keep arround 20 for human viewing
+SPEED = 3000  # Keep arround 20 for human viewing
 
 class SnakeGameAI:
 
-    def __init__(self, w=640, h=480):
+    def __init__(self, w=900, h=880):
         self.w = w
         self.h = h
+        self.blockSize = BLOCK_SIZE
         # Init display
         self.display = pygame.display.set_mode((self.w, self.h))
         pygame.display.set_caption('Snake')
@@ -44,7 +45,10 @@ class SnakeGameAI:
         self.direction = Direction.RIGHT
 
         # Snake starts in the middle with 3 blocks
-        self.head = Point(self.w/2, self.h/2)
+        # NEW (Snaps to grid)
+        x = (self.w // 2 // BLOCK_SIZE) * BLOCK_SIZE
+        y = (self.h // 2 // BLOCK_SIZE) * BLOCK_SIZE
+        self.head = Point(x, y)
         self.snake = [self.head,
                       Point(self.head.x-BLOCK_SIZE, self.head.y),
                       Point(self.head.x-(2*BLOCK_SIZE), self.head.y)]
@@ -78,13 +82,13 @@ class SnakeGameAI:
         self.snake.insert(0, self.head)
 
         # 3. Check if game over
-        reward = 0
+        reward = -0.005
         game_over = False
         
         # If collision OR if nothing happens for too long (starvation)
         if self.is_collision() or self.frame_iteration > 100*len(self.snake):
             game_over = True
-            reward = -10
+            reward = -20
             return reward, game_over, self.score
 
         # 4. Place new food or just move
