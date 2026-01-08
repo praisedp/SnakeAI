@@ -69,7 +69,7 @@ class SnakeGameAI:
             self._place_food()
 
 
-    def play_step(self, action):
+    def play_step(self, action, render=True):
         self.frame_iteration += 1
         # 1. Collect User Input
         for event in pygame.event.get():
@@ -100,8 +100,9 @@ class SnakeGameAI:
             self.snake.pop() # Remove the tail (movement simulation)
 
         # 5. Update UI and Clock
-        self._update_ui()
-        self.clock.tick(SPEED)
+        if render:
+            self._update_ui()
+            self.clock.tick(SPEED) # This is the brakes
         
         # 6. Return game info
         return reward, game_over, self.score

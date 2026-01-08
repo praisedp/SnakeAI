@@ -202,10 +202,6 @@ class Agent:
 
         final_move = [0, 0, 0]
 
-
-        
-        # self.epsilon = 0 # for testing
-
         if random.randint(0, 200) < self.epsilon:
             move = random.randint(0, 2)
         else:
@@ -233,7 +229,9 @@ def train():
         state_old = agent.get_state(game)
         action = agent.get_action(state_old)
 
-        reward, done, score = game.play_step(action)
+        should_render = (agent.n_games % 500 == 0)
+
+        reward, done, score = game.play_step(action,  render=should_render)
         state_new = agent.get_state(game)
 
         agent.train_short_memory(state_old, action, reward, state_new, done)
