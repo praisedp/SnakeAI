@@ -25,7 +25,7 @@ BLUE2 = (255, 255, 255)
 BLACK = (0, 0, 0)
 
 BLOCK_SIZE = 20
-SPEED = 10000  # Keep arround 20 for human viewing
+SPEED = 3000  # Keep arround 20 for human viewing
 
 class SnakeGameAI:
 
