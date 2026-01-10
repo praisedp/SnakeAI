@@ -25,7 +25,7 @@ BLUE2 = (255, 255, 255)
 BLACK = (0, 0, 0)
 
 BLOCK_SIZE = 20
-SPEED = 3000  # Keep arround 20 for human viewing
+SPEED = 20  # Keep arround 20 for human viewing
 
 class SnakeGameAI:
 
@@ -82,19 +82,19 @@ class SnakeGameAI:
         self.snake.insert(0, self.head)
 
         # 3. Check if game over
-        reward = -0.005
+        reward = -0.01
         game_over = False
         
         # If collision OR if nothing happens for too long (starvation)
         if self.is_collision() or self.frame_iteration > 100*len(self.snake):
             game_over = True
-            reward = -15
+            reward = -15 - (self.score * 0.5)
             return reward, game_over, self.score
 
         # 4. Place new food or just move
         if self.head == self.food:
             self.score += 1
-            reward = 30
+            reward = +10
             self._place_food()
         else:
             self.snake.pop() # Remove the tail (movement simulation)

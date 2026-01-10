@@ -10,9 +10,9 @@ from helper import plot
 # --------------------
 # Hyperparameters
 # --------------------
-MAX_MEMORY = 100_000
+MAX_MEMORY = 500_000
 BATCH_SIZE = 1000
-LR = 0.001
+LR = 0.0001
 
 # NOTE: consider number of self.n_games in init and self.epsilon
 
@@ -37,7 +37,7 @@ class Agent:
             self.model.load_state_dict(torch.load('./models/model.pth'))
             self.model.eval() # Set to evaluation mode
             self.target_model.load_state_dict(self.model.state_dict())
-            # self.n_games = 2000 # Trick to disable random exploration immediately
+            self.n_games = 2500 # Trick to disable random exploration immediately
             print(">> MODEL LOADED! Resuming with smart brain.")
 
    # --------------------------------------------------
@@ -203,8 +203,8 @@ class Agent:
     # --------------------------------------------------
     def get_action(self, state):
         self.epsilon = 100 - self.n_games // 25
-        if self.epsilon < 10:
-             self.epsilon = 10
+        if self.epsilon < 5:
+             self.epsilon = 0
 
         final_move = [0, 0, 0]
 
@@ -234,10 +234,8 @@ def train():
     while True:
         state_old = agent.get_state(game)
         action = agent.get_action(state_old)
-        
-        should_render = (agent.n_games % 500 == 0)
 
-        reward, done, score = game.play_step(action, render=should_render)
+        reward, done, score = game.play_step(action, render=True)
         state_new = agent.get_state(game)
 
         agent.train_short_memory(state_old, action, reward, state_new, done)
@@ -248,9 +246,9 @@ def train():
             agent.n_games += 1
             agent.train_long_memory()
 
-            if agent.n_games % 500 == 0:
+            if agent.n_games % 50 == 0:
                 agent.target_model.load_state_dict(agent.model.state_dict())
-                print(">>> Target Network Updated!")
+                # print(">>> Target Network Updated!")
 
             if score > record:
                 record = score

@@ -7,7 +7,7 @@ def plot(scores, mean_scores):
     display.clear_output(wait=True)
     display.display(plt.gcf())
     plt.clf()
-    plt.title('Training... V4 30 DQN')
+    plt.title('Training... V3 30 DQN')
     plt.xlabel('Number of Games')
     plt.ylabel('Score')
     plt.plot(scores)

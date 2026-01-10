@@ -10,7 +10,7 @@ from helper import plot
 # --------------------
 # Hyperparameters
 # --------------------
-MAX_MEMORY = 100_000
+MAX_MEMORY = 500_000
 BATCH_SIZE = 1000
 LR = 0.001
 
@@ -26,8 +26,8 @@ class Agent:
         self.memory = deque(maxlen=MAX_MEMORY)
 
         # 30 inputs: 24 ray vision + 4 direction + 2 food direction
-        self.model = Linear_QNet(30, 256, 3)
-        self.target_model = Linear_QNet(30, 256, 3)
+        self.model = Linear_QNet(30, 64, 3)
+        self.target_model = Linear_QNet(30, 64, 3)
         self.target_model.load_state_dict(self.model.state_dict())
         self.target_model.eval()
         self.trainer = QTrainer(self.model, lr=LR, gamma=self.gamma)
@@ -37,7 +37,7 @@ class Agent:
             self.model.load_state_dict(torch.load('./models/model.pth'))
             self.model.eval() # Set to evaluation mode
             self.target_model.load_state_dict(self.model.state_dict())
-            self.n_games = 2000 # Trick to disable random exploration immediately
+            self.n_games = 2500 # Trick to disable random exploration immediately
             print(">> MODEL LOADED! Resuming with smart brain.")
 
    # --------------------------------------------------
@@ -202,9 +202,9 @@ class Agent:
     # Action selection (ε-greedy)
     # --------------------------------------------------
     def get_action(self, state):
-        self.epsilon = 80 - self.n_games // 25
-        if self.epsilon < 20:
-             self.epsilon = 1
+        self.epsilon = 100 - self.n_games // 25
+        if self.epsilon < 5:
+             self.epsilon = 0
 
         final_move = [0, 0, 0]
 
@@ -235,9 +235,9 @@ def train():
         state_old = agent.get_state(game)
         action = agent.get_action(state_old)
         
-        should_render = (agent.n_games % 50 == 0)
+        # should_render = (agent.n_games % 50 == 0)
 
-        reward, done, score = game.play_step(action, render=should_render)
+        reward, done, score = game.play_step(action, render=True)
         state_new = agent.get_state(game)
 
         agent.train_short_memory(state_old, action, reward, state_new, done)
@@ -248,7 +248,7 @@ def train():
             agent.n_games += 1
             agent.train_long_memory()
 
-            if agent.n_games % 10 == 0:
+            if agent.n_games % 50 == 0:
                 agent.target_model.load_state_dict(agent.model.state_dict())
                 # print(">>> Target Network Updated!")
 
