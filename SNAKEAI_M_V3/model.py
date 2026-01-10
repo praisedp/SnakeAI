@@ -16,10 +16,10 @@ class Linear_QNet(nn.Module):
         # self.linear2 = nn.Linear(settings.HIDDEN_SIZE_1, settings.HIDDEN_SIZE_2)
         
         # Layer 3: Hidden -> Hidden
-        self.linear3 = nn.Linear(settings.HIDDEN_SIZE_1, settings.HIDDEN_SIZE_1)
+        self.linear3 = nn.Linear(settings.HIDDEN_SIZE_1, settings.HIDDEN_SIZE_2)
         
         # Layer 4: Hidden -> Output (Action)
-        self.output = nn.Linear(settings.HIDDEN_SIZE_1, settings.OUTPUT_SIZE)
+        self.output = nn.Linear(settings.HIDDEN_SIZE_2, settings.OUTPUT_SIZE)
 
         # Move model to the correct device (GPU/CPU) immediately
         self.to(settings.DEVICE)

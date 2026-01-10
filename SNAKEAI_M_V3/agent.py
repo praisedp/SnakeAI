@@ -42,7 +42,6 @@ class Agent:
         current = start_point
         distance = 0
 
-        food_signal = 0.0
         body_signal = 0.0
 
         # Use game dimensions from settings
@@ -72,21 +71,16 @@ class Agent:
             if current in snake_entity.body:
                 body_signal = max(body_signal, log_proximity)
 
-            # Food detection (Check GLOBAL food list)
-            if current in game.food_list:
-                food_signal = max(food_signal, log_proximity)
-
         # Wall signal
         wall_signal = 1 - (np.log(distance + 1) / log_max)
         wall_signal = max(0.0, wall_signal)
 
-        return [wall_signal, body_signal, food_signal]
+        return [wall_signal, body_signal]
 
     # --------------------------------------------------
     # State representation
     # --------------------------------------------------
     def get_state(self, game, snake_entity):
-        # NOTE: Added 'snake_entity' arg
         head = snake_entity.head
 
         # Define 8 compass points
@@ -112,8 +106,20 @@ class Agent:
         state = []
 
         # NOTE: 1. Vision (Pass snake_entity to cast_ray)
-        for d in rays:
-            state.extend(self.cast_ray(game, snake_entity, head, d))
+        # We use enumerate(rays) to get the index 'i'
+        for i, d in enumerate(rays):
+            # result is [wall_signal, body_signal]
+            result = self.cast_ray(game, snake_entity, head, d)
+            
+            # Even Index (0, 2, 4, 6) = Cardinal (Front, Right, Back, Left)
+            # We want BOTH Wall and Body
+            if i % 2 == 0:
+                state.extend(result)
+                
+            # Odd Index (1, 3, 5, 7) = Diagonal (Front-Right, etc.)
+            # We want BODY ONLY (ignore wall)
+            else:
+                state.append(result[1])
 
         # NOTE: 2. Orientation (One-Hot)
         state.extend([
@@ -123,41 +129,116 @@ class Agent:
             int(snake_entity.direction == Direction.DOWN)
         ])
 
-        # NOTE: 3. Food Direction (Relative to Head)
-        # Find closest food if multiple exist
-        closest_food = None
-        min_dist = float('inf')
+        # NOTE: 3. GPS Food Location (Closest K Foods) - (K * 3) Inputs
+        k_foods = 1 # How many foods to track
         
+        # Calculate distance to ALL foods
+        food_distances = []
         if len(game.food_list) > 0:
             for food in game.food_list:
-                dist = abs(food.x - head.x) + abs(food.y - head.y)
-                if dist < min_dist:
-                    min_dist = dist
-                    closest_food = food
-        else:
-            closest_food = Point(0,0) # Should not happen
-
-        food_dx = closest_food.x - head.x
-        food_dy = closest_food.y - head.y
+                # Raw global difference
+                raw_dx = food.x - head.x
+                raw_dy = food.y - head.y
+                
+                # --- ROTATION LOGIC (Make coordinates relative to head) ---
+                # Forward = +Y in local space, Right = +X in local space
+                if snake_entity.direction == Direction.UP:
+                    # Front is -y (screen up), Right is +x
+                    rel_front = -raw_dy
+                    rel_right = raw_dx
+                elif snake_entity.direction == Direction.RIGHT:
+                    # Front is +x, Right is +y
+                    rel_front = raw_dx
+                    rel_right = raw_dy
+                elif snake_entity.direction == Direction.DOWN:
+                    # Front is +y, Right is -x
+                    rel_front = raw_dy
+                    rel_right = -raw_dx
+                elif snake_entity.direction == Direction.LEFT:
+                    # Front is -x, Right is -y
+                    rel_front = -raw_dx
+                    rel_right = -raw_dy
+                
+                dist = np.sqrt(raw_dx**2 + raw_dy**2)
+                food_distances.append((dist, rel_front, rel_right))
         
-        # Rotate food coords
-        if snake_entity.direction == Direction.UP:
-            rel_food_front = -food_dy 
-            rel_food_right = food_dx
-        elif snake_entity.direction == Direction.RIGHT:
-            rel_food_front = food_dx
-            rel_food_right = food_dy
-        elif snake_entity.direction == Direction.DOWN:
-            rel_food_front = food_dy
-            rel_food_right = -food_dx
-        elif snake_entity.direction == Direction.LEFT:
-            rel_food_front = -food_dx
-            rel_food_right = -food_dy
+        # Sort by distance (closest first)
+        food_distances.sort(key=lambda x: x[0])
+        
+        # Take top K
+        active_foods = food_distances[:k_foods]
+        
+        max_diag = np.sqrt(game.w**2 + game.h**2)
 
-        state.extend([
-            np.sign(rel_food_front),
-            np.sign(rel_food_right)
-        ])
+        # Add data to state
+        for i in range(k_foods):
+            if i < len(active_foods):
+                dist, f_front, f_right = active_foods[i]
+                
+                # Normalize Coordinates (-1 to 1)
+                norm_front = f_front / game.h  # Vertical-ish axis
+                norm_right = f_right / game.w  # Horizontal-ish axis
+                
+                # Normalize Distance (1.0 = close, 0.0 = far)
+                norm_dist = 1 - (dist / max_diag)
+                
+                state.extend([norm_front, norm_right, norm_dist])
+            else:
+                # Padding if not enough food found
+                state.extend([0, 0, 0])
+
+        # NOTE: 4. Context Variables
+        
+        # A. Snake Length (Normalized)
+        # Allows AI to switch strategies (Aggressive vs Cautious) based on size
+        total_cells = (game.w // settings.BLOCK_SIZE) * (game.h // settings.BLOCK_SIZE)
+        raw_ratio = len(snake_entity.body) / total_cells
+        
+        # Apply Square Root curve
+        norm_length = np.sqrt(raw_ratio)
+        state.append(norm_length)
+
+        # B. Hunger / Starvation (Normalized)
+        # Allows AI to panic if it's about to starve
+        limit = settings.STARVE_LIMIT * len(snake_entity.body)
+        # Safety check to avoid division by zero
+        if limit == 0: limit = 100 
+        norm_hunger = snake_entity.frame_iteration / limit
+        state.append(norm_hunger)
+
+        # C. Tail GPS (3 Inputs)
+        # Exactly like Food GPS, but targets the tail tip.
+        # This helps the AI learn to "loop" safely when trapped.
+        
+        tail = snake_entity.body[-1] # The last block of the snake
+        
+        # 1. Raw Coordinates
+        tail_dx = tail.x - head.x
+        tail_dy = tail.y - head.y
+        
+        # 2. Rotation Logic (Ego-Centric)
+        if snake_entity.direction == Direction.UP:
+            tail_rel_front = -tail_dy
+            tail_rel_right = tail_dx
+        elif snake_entity.direction == Direction.RIGHT:
+            tail_rel_front = tail_dx
+            tail_rel_right = tail_dy
+        elif snake_entity.direction == Direction.DOWN:
+            tail_rel_front = tail_dy
+            tail_rel_right = -tail_dx
+        elif snake_entity.direction == Direction.LEFT:
+            tail_rel_front = -tail_dx
+            tail_rel_right = -tail_dy
+            
+        # 3. Distance & Normalization
+        tail_dist = np.sqrt(tail_dx**2 + tail_dy**2)
+        max_diag = np.sqrt(game.w**2 + game.h**2)
+        
+        norm_tail_front = tail_rel_front / game.h
+        norm_tail_right = tail_rel_right / game.w
+        norm_tail_dist = 1 - (tail_dist / max_diag) # 1.0 = Tail is touching head
+        
+        state.extend([norm_tail_front, norm_tail_right, norm_tail_dist])
 
         return np.array(state, dtype=float)
 
