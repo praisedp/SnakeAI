@@ -10,16 +10,16 @@ class Linear_QNet(nn.Module):
         super().__init__()
         # Initialize layers using sizes from settings.py
         # Layer 1: Input -> Hidden 1
-        self.linear1 = nn.Linear(settings.INPUT_SIZE, settings.HIDDEN_SIZE_2)
+        self.linear1 = nn.Linear(settings.INPUT_SIZE, settings.HIDDEN_SIZE_1)
         
         # Layer 2: Hidden -> Hidden
-        self.linear2 = nn.Linear(settings.HIDDEN_SIZE_2, settings.HIDDEN_SIZE_2)
+        # self.linear2 = nn.Linear(settings.HIDDEN_SIZE_1, settings.HIDDEN_SIZE_2)
         
         # Layer 3: Hidden -> Hidden
-        self.linear3 = nn.Linear(settings.HIDDEN_SIZE_2, settings.HIDDEN_SIZE_3)
+        self.linear3 = nn.Linear(settings.HIDDEN_SIZE_1, settings.HIDDEN_SIZE_2)
         
         # Layer 4: Hidden -> Output (Action)
-        self.output = nn.Linear(settings.HIDDEN_SIZE_3, settings.OUTPUT_SIZE)
+        self.output = nn.Linear(settings.HIDDEN_SIZE_2, settings.OUTPUT_SIZE)
 
         # Move model to the correct device (GPU/CPU) immediately
         self.to(settings.DEVICE)
@@ -29,7 +29,7 @@ class Linear_QNet(nn.Module):
         x = F.relu(self.linear1(x))
         
         # 2. First Hidden Layer + Relu
-        x = F.relu(self.linear2(x))
+        # x = F.relu(self.linear2(x))
         
         # 3. Second Hidden Layer + Relu
         x = F.relu(self.linear3(x))
