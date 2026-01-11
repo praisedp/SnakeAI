@@ -18,7 +18,6 @@ class Agent:
         self.memory = deque(maxlen=settings.MAX_MEMORY)
 
         # Dynamic Model Size from Settings
-        # (Input=30, Hidden1=256, Hidden2=128, Hidden3=64, Output=3)
         self.model = Linear_QNet() 
         self.target_model = Linear_QNet()
         self.target_model.load_state_dict(self.model.state_dict())
@@ -41,7 +40,7 @@ class Agent:
         # NOTE: Added 'snake_entity' arg so it knows which body to check
         current = start_point
         distance = 0
-
+        food_signal = 0.0
         body_signal = 0.0
 
         # Use game dimensions from settings
@@ -71,11 +70,15 @@ class Agent:
             if current in snake_entity.body:
                 body_signal = max(body_signal, log_proximity)
 
+            # Food detection 
+            if current in game.food_list:
+                food_signal = max(food_signal, log_proximity)
+
         # Wall signal
         wall_signal = 1 - (np.log(distance + 1) / log_max)
         wall_signal = max(0.0, wall_signal)
 
-        return [wall_signal, body_signal]
+        return [wall_signal, body_signal, food_signal]
 
     # --------------------------------------------------
     # State representation
@@ -120,6 +123,7 @@ class Agent:
             # We want BODY ONLY (ignore wall)
             else:
                 state.append(result[1])
+                state.append(result[2])
 
         # NOTE: 2. Orientation (One-Hot)
         state.extend([

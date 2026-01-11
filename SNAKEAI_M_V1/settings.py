@@ -5,16 +5,16 @@ import torch
 # ==============================================================================
 
 # --- SYSTEM & FILES ---
-RENDER = False                 # NOTE: Set to False to speed up training (no GUI)
+RENDER = True                 # NOTE: Set to False to speed up training (no GUI)
 
 MODEL_PATH = './models/model.pth'
 STARVE_LIMIT = 100             # Steps allowed per body length before starvation
 SPEED = 20 if RENDER else 0    # Game speed (frames per sec). Use 0 for max speed.
 
-LOAD_MODEL = False              # NOTE: This will Reduce randomness
+LOAD_MODEL = True              # NOTE: This will Reduce randomness
 
 # --- GRAPHS & LOGS ---
-PLOT_TITLE = "Training Performance: Snake AI V4" # NOTE: Name
+PLOT_TITLE = "Training Performance: Master Snake V1" # NOTE: Name
 PLOT_DESCRIPTION = "Solid Line = Score | Dotted Line = Mean Score"
 
 # --- DIMENSIONS & GRAPHICS ---
@@ -49,14 +49,14 @@ NUM_FOOD = 1                  # How many apples exist on screen at once?
 # --- HYPERPARAMETERS ---
 MAX_MEMORY = 500_000          # Experience Replay Buffer Size
 BATCH_SIZE = 1000             # How many memories to train on per game
-LR = 0.001                   # Learning Rate (Stepsize for the brain)
+LR = 0.0001                   # Learning Rate (Stepsize for the brain)
 GAMMA = 0.9                   # Discount Factor (0.9 = cares about future, 0.1 = short sighted)
 TARGET_UPDATE_SIZE = 50
 
 # --- EXPLORATION (Epsilon) ---
 # Randomness logic: Epsilon = START - (n_games // DECAY)
 EPSILON_START = 100            # Initial randomness % (e.g. 100%)
-EPSILON_MIN = 5               # The "Floor" (Never go below 1% random)
+EPSILON_MIN = 2               # The "Floor" (Never go below 1% random)
 EPSILON_DECAY = 25            # Higher number = Slower decay (Longer exploration phase)
 EPSILON_MEMORY_LOAD = EPSILON_START * EPSILON_DECAY # Trick to reduce epsilon immediately when loading memory
 
