@@ -8,19 +8,19 @@ import torch
 RENDER = False                 # NOTE: Set to False to speed up training (no GUI)
 
 MODEL_PATH = './models/model.pth'
-STARVE_LIMIT = 200             # Steps allowed per body length before starvation
+STARVE_LIMIT = 150             # Steps allowed per body length before starvation
 SPEED = 20 if RENDER else 0    # Game speed (frames per sec). Use 0 for max speed.
 
 LOAD_MODEL = True              # NOTE: This will Reduce randomness
 
 # --- GRAPHS & LOGS ---
-PLOT_TITLE = "Training Performance: Master Snake V2 24 inputs" # NOTE: Name
+PLOT_TITLE = "MASTER V1 (M_V2 new code structure retrain)" # NOTE: Name
 PLOT_DESCRIPTION = "Solid Line = Score | Dotted Line = Mean Score"
 
 # --- DIMENSIONS & GRAPHICS ---
 BLOCK_SIZE = 20
-WIDTH = 960                   # Map Width (Must be multiple of BLOCK_SIZE)
-HEIGHT = 880                  # Map Height (Must be multiple of BLOCK_SIZE)
+WIDTH = 600                   # Map Width (Must be multiple of BLOCK_SIZE)
+HEIGHT = 600                  # Map Height (Must be multiple of BLOCK_SIZE)
 COLOR_FOOD = (200, 0, 0)  # Red
 
 # Colors (R, G, B)
@@ -28,15 +28,14 @@ COLOR_BG = (0, 0, 0)          # Black Background
 COLOR_TEXT = (255, 255, 255)  # White Text
 GREEN = (0, 200, 0)
 BLUE = (0, 0, 200)
-PINK = (255, 105, 180)
-RED = (200, 0, 0)
+
 # --- MULTI-AGENT SETUP ---
 # Defining the roster of agents. 
 # For now, keep it to 1 until you refactor game.py completely.
 AGENTS = [
     {
-        "name": "Pasan", 
-        "color": RED   
+        "name": "Viper", 
+        "color": BLUE   
     },
     # Future Agents (Uncomment when multi-agent logic is ready):
     # {
@@ -49,8 +48,8 @@ NUM_FOOD = 1                  # How many apples exist on screen at once?
 
 # --- HYPERPARAMETERS ---
 MAX_MEMORY = 500_000          # Experience Replay Buffer Size
-BATCH_SIZE = 2000             # How many memories to train on per game
-LR = 0.0001                    # Learning Rate (Stepsize for the brain)
+BATCH_SIZE = 1500             # How many memories to train on per game
+LR = 0.0005                    # Learning Rate (Stepsize for the brain)
 GAMMA = 0.9                   # Discount Factor (0.9 = cares about future, 0.1 = short sighted)
 TARGET_UPDATE_SIZE = 100      # Number of games take to update the Target NN
 
@@ -58,13 +57,14 @@ TARGET_UPDATE_SIZE = 100      # Number of games take to update the Target NN
 # Randomness logic: Epsilon = START - (n_games // DECAY)
 EPSILON_START = 100            # Initial randomness % (e.g. 100%)
 EPSILON_MIN = 10               # The "Floor" (Never go below n% random)
-EPSILON_DECAY = 10            # Higher number = Slower decay (Longer exploration phase)
-EPSILON_MEMORY_LOAD = EPSILON_START * EPSILON_DECAY # Trick to reduce epsilon immediately when loading memory
-# EPSILON_MEMORY_LOAD = 80000
+EPSILON_DECAY = 50            # Higher number = Slower decay (Longer exploration phase)
+# EPSILON_MEMORY_LOAD = EPSILON_START * EPSILON_DECAY # Trick to reduce epsilon immediately when loading memory
+EPSILON_MEMORY_LOAD = 4000
 
 # --- REWARDS (The "Definition of Bad") ---
 REWARD_FOOD = 30
 REWARD_STEP = -0.01
+REWARD_KILL = 50  # Big bonus for taking out an enemy
 REWARD_COLLISION = -20
 # Formula: final_penalty = REWARD_COLLISION - (score * REWARD_STARVE_MULTIPLIER)
 # Example at Score 50: -15 - (50 * 0.5) = -40 penalty
@@ -72,7 +72,8 @@ REWARD_STARVE_MULTIPLIER = 0.5
 
 # --- MODEL ARCHITECTURE ---
 # You can now change the brain size here without touching model.py
-INPUT_SIZE = 32               # 24 Ray + 4 Orientation + 2 Food Direction
+STACK_SIZE = 1               # How many frames to remember
+INPUT_SIZE = 32 * STACK_SIZE  # 24 Ray + 4 Orientation + 2 Food Direction
 HIDDEN_SIZE_1 = 256           # First Hidden Layer
 HIDDEN_SIZE_2 = 128           # Second Hidden Layer
 HIDDEN_SIZE_3 = 64            # Third Hidden Layer

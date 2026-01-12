@@ -99,29 +99,29 @@ class SnakeGameAI:
         # 2. Spawn Multiple Foods
         self.food_list = []
         for _ in range(settings.NUM_FOOD):
-            self._place_food()
+            if not self._place_food():
+                break
             
         self.frame_iteration = 0
 
     def _place_food(self):
-        while True:
-            x = random.randint(0, (self.w - settings.BLOCK_SIZE) // settings.BLOCK_SIZE) * settings.BLOCK_SIZE
-            y = random.randint(0, (self.h - settings.BLOCK_SIZE) // settings.BLOCK_SIZE) * settings.BLOCK_SIZE
-            food = Point(x, y)
-            
-            # Check if food is inside ANY snake body
-            occupied = False
-            for snake in self.snakes:
-                if food in snake.body:
-                    occupied = True
-                    break
-            # Also check if food is on top of other food
-            if food in self.food_list:
-                occupied = True
-                
-            if not occupied:
-                self.food_list.append(food)
-                break
+        occupied = {(pt.x, pt.y) for pt in self.food_list}
+        for snake in self.snakes:
+            occupied.update((pt.x, pt.y) for pt in snake.body)
+
+        candidates = [
+            (x, y)
+            for x in range(0, self.w, settings.BLOCK_SIZE)
+            for y in range(0, self.h, settings.BLOCK_SIZE)
+            if (x, y) not in occupied
+        ]
+
+        if not candidates:
+            return False
+
+        x, y = random.choice(candidates)
+        self.food_list.append(Point(x, y))
+        return True
 
     def play_step(self, actions, render=True):
         self.frame_iteration += 1
@@ -175,6 +175,11 @@ class SnakeGameAI:
 
             rewards.append(reward)
             dones.append(game_over)
+
+        # Keep apples from disappearing due to an unexpected removal
+        while len(self.food_list) < settings.NUM_FOOD:
+            if not self._place_food():
+                break
 
         # 4. Update UI
         if settings.RENDER and render:
