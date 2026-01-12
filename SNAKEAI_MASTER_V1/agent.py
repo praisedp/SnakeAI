@@ -258,8 +258,7 @@ class Agent:
     # --- CONTEXT SYSTEM ---
     def _get_context_data(self, game, snake):
         # 1. Length
-        total_cells = (game.w // settings.BLOCK_SIZE) * (game.h // settings.BLOCK_SIZE)
-        norm_len = np.sqrt(len(snake.body) / total_cells)
+        norm_len = len(snake.body) / (len(snake.body) + 20.0)
         
         # 2. Hunger
         limit = settings.STARVE_LIMIT * len(snake.body)

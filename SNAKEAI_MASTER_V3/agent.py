@@ -2,6 +2,7 @@ import os
 import torch
 import random
 import numpy as np
+import math
 from collections import deque
 from game import SnakeGameAI, Direction, Point
 from model import Linear_QNet, QTrainer
@@ -20,11 +21,11 @@ class Agent:
     def get_state(self, game, snake_entity):
         # 1. Collect Raw Data Components
         vision_state = self._get_vision_state(game, snake_entity)
-        gps_state    = self._get_food_gps(game, snake_entity)
+        smell_state  = self._get_food_smell(game, snake_entity)
         context_state = self._get_context_data(game, snake_entity)
         
         # 2. Combine into 'Current Frame' (Size: 32)
-        current_frame = np.concatenate([vision_state, gps_state, context_state])
+        current_frame = np.concatenate([vision_state, smell_state, context_state])
         
         # 3. Frame Stacking (Memory)
         # We append this frame to the snake's individual history
@@ -110,17 +111,17 @@ class Agent:
         
         vision_data = []
         for i, direction in enumerate(directions):
-            # cast_ray returns [wall, body, enemy, food]
+            # cast_ray returns [wall, body, food]
             result = self._cast_ray(game, snake, head, direction)
             
             # Optimization: 
             # Cardinal rays (Front, Right, Back, Left) -> Get FULL data
             # Diagonal rays -> Get BODY only (Walls are less useful diagonally)
             if i % 2 == 0: 
-                vision_data.extend([result[0], result[1], result[2], result[3]]) # Add result[2] Enemy Body
+                vision_data.extend([result[0], result[1], result[3]]) # Add result[2] Enemy Body
             else:
                 vision_data.append(result[1]) # My Body
-                vision_data.append(result[2]) # Enemy Body
+                # vision_data.append(result[2]) # Enemy Body
                 vision_data.append(result[3]) # Food
                 
         # Add Orientation One-Hot
@@ -208,10 +209,49 @@ class Agent:
             return dirs[4:] + dirs[:4]
         elif direction == Direction.LEFT:
             return dirs[6:] + dirs[:6]
+    
+    def _get_food_smell(self, game, snake):
+        # 1. Initialize 8 Sectors (0.0 means no food)
+        # 0=Front, 1=Front-Right, 2=Right, 3=Back-Right
+        # 4=Back,  5=Back-Left,   6=Left,  7=Front-Left
+        sectors = [0.0] * 8
+        
+        # 2. Loop through ALL food (Variable number doesn't matter!)
+        max_diag = np.sqrt(game.w**2 + game.h**2)
+        
+        for food in game.food_list:
+            raw_dx = food.x - snake.head.x
+            raw_dy = food.y - snake.head.y
             
-    # --- GPS SYSTEM (Food & Tail) ---
-    def _get_food_gps(self, game, snake):
-        return self._get_target_gps(game, snake, game.food_list)
+            # A. Rotate to be Relative to Head (Ego-centric)
+            # After this: +X is Front, +Y is Right
+            rel_front, rel_right = self._rotate_coordinates(snake.direction, raw_dx, raw_dy)
+            
+            # B. Calculate Distance & Signal
+            dist = np.sqrt(rel_front**2 + rel_right**2)
+            signal = 1.0 - (dist / max_diag) # 1.0 = Touching, 0.0 = Far
+            
+            # C. Calculate Angle (0 radians is Front)
+            # atan2(y, x) -> result is between -pi and +pi
+            angle = math.atan2(rel_right, rel_front) 
+            
+            # D. Map Angle to Sector Index (0-7)
+            # Convert radians to degrees (-180 to 180) -> shift to (0 to 360)
+            degree = math.degrees(angle)
+            
+            # Shift so that 'Front' (0 degrees) is in the middle of a slice
+            # Slice 0 covers -22.5 to +22.5 degrees
+            idx = int(((degree + 22.5) % 360) // 45)
+            
+            # E. Update the Sector (Keep the Strongest Signal)
+            sectors[idx] = max(sectors[idx], signal)
+
+        # 3. Total Food Count (Normalized)
+        # Using softsign normalization (Count 10 = 0.5)
+        count_norm = len(game.food_list) / (len(game.food_list) + 10.0)
+        
+        # Combine: 8 Directional Inputs + 1 Count Input
+        return np.array(sectors + [count_norm])
 
     def _get_target_gps(self, game, snake, targets):
         """Calculates distance and relative angle to closest targets"""

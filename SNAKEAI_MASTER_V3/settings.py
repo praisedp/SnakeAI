@@ -5,7 +5,7 @@ import torch
 # ==============================================================================
 
 # --- SYSTEM & FILES ---
-RENDER = True                 # NOTE: Set to False to speed up training (no GUI)
+RENDER = False                 # NOTE: Set to False to speed up training (no GUI)
 
 MODEL_PATH = './models/model.pth'
 STARVE_LIMIT = 100             # Steps allowed per body length before starvation
@@ -14,7 +14,7 @@ SPEED = 20 if RENDER else 0    # Game speed (frames per sec). Use 0 for max spee
 LOAD_MODEL = True              # NOTE: This will Reduce randomness
 
 # --- GRAPHS & LOGS ---
-PLOT_TITLE = "Training Performance: Master Snake V3 Framestacking" # NOTE: Name
+PLOT_TITLE = "Master Snake V3 Framestacking + food smell" # NOTE: Name
 PLOT_DESCRIPTION = "Solid Line = Score | Dotted Line = Mean Score"
 
 # --- DIMENSIONS & GRAPHICS ---
@@ -37,33 +37,34 @@ AGENTS = [
         "name": "Viper", 
         "color": BLUE   
     },
-    {
-        "name": "Python", 
-        "color": (GREEN)  # Darker Blue Body
-    },
+    # Future Agents (Uncomment when multi-agent logic is ready):
+    # {
+    #     "name": "Python", 
+    #     "color": (0, 0, 200)   # Darker Blue Body
+    # },
 ]
 
-NUM_FOOD = 1                  # How many apples exist on screen at once?
+NUM_FOOD = 2                  # How many apples exist on screen at once?
 
 # --- HYPERPARAMETERS ---
 MAX_MEMORY = 500_000          # Experience Replay Buffer Size
-BATCH_SIZE = 1500             # How many memories to train on per game
-LR = 0.0005                    # Learning Rate (Stepsize for the brain)
+BATCH_SIZE = 1000             # How many memories to train on per game
+LR = 0.001                    # Learning Rate (Stepsize for the brain)
 GAMMA = 0.9                   # Discount Factor (0.9 = cares about future, 0.1 = short sighted)
 TARGET_UPDATE_SIZE = 100      # Number of games take to update the Target NN
 
 # --- EXPLORATION (Epsilon) ---
 # Randomness logic: Epsilon = START - (n_games // DECAY)
 EPSILON_START = 100            # Initial randomness % (e.g. 100%)
-EPSILON_MIN = 0               # The "Floor" (Never go below n% random)
+EPSILON_MIN = 5               # The "Floor" (Never go below n% random)
 EPSILON_DECAY = 50            # Higher number = Slower decay (Longer exploration phase)
-EPSILON_MEMORY_LOAD = EPSILON_START * EPSILON_DECAY # Trick to reduce epsilon immediately when loading memory
-# EPSILON_MEMORY_LOAD = 80000
+# EPSILON_MEMORY_LOAD = EPSILON_START * EPSILON_DECAY # Trick to reduce epsilon immediately when loading memory
+EPSILON_MEMORY_LOAD = 4000
 
 # --- REWARDS (The "Definition of Bad") ---
 REWARD_FOOD = 30
 REWARD_STEP = -0.01
-REWARD_KILL = 40  # Big bonus for taking out an enemy
+REWARD_KILL = 50  # Big bonus for taking out an enemy
 REWARD_COLLISION = -20
 # Formula: final_penalty = REWARD_COLLISION - (score * REWARD_STARVE_MULTIPLIER)
 # Example at Score 50: -15 - (50 * 0.5) = -40 penalty
@@ -72,7 +73,7 @@ REWARD_STARVE_MULTIPLIER = 0.5
 # --- MODEL ARCHITECTURE ---
 # You can now change the brain size here without touching model.py
 STACK_SIZE = 3               # How many frames to remember
-INPUT_SIZE = 40 * STACK_SIZE  # 24 Ray + 4 Orientation + 2 Food Direction
+INPUT_SIZE = 38 * STACK_SIZE  
 HIDDEN_SIZE_0 = 512
 HIDDEN_SIZE_1 = 256           # First Hidden Layer
 HIDDEN_SIZE_2 = 128           # Second Hidden Layer
