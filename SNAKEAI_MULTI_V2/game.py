@@ -312,8 +312,7 @@ class SnakeGameAI:
 
         # 3. Enemy Collision
         for other in self.snakes:
-            if other != snake:
-                # Treat dead snakes as solid to ensure simultaneous head-on hits kill both
+            if other != snake and other.is_alive:
                 if pt in other.body:
                     return True
         return False
