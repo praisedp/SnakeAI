@@ -94,12 +94,29 @@ class Agent:
     def _attempt_resume(self):
         if settings.LOAD_MODEL and os.path.exists(settings.MODEL_PATH):
             print(">> Loading Model...")
-            saved_state = torch.load(settings.MODEL_PATH, map_location=settings.DEVICE)
-            self.model.load_state_dict(saved_state)
-            self.target_model.load_state_dict(saved_state)
+            
+            # Load the file
+            if settings.DEVICE == 'cpu':
+                checkpoint = torch.load(settings.MODEL_PATH, map_location='cpu')
+            else:
+                checkpoint = torch.load(settings.MODEL_PATH)
+            
+            # Check if it's the new format (Dict) or old format (Weights only)
+            if isinstance(checkpoint, dict) and 'state_dict' in checkpoint:
+                self.model.load_state_dict(checkpoint['state_dict'])
+                self.target_model.load_state_dict(checkpoint['state_dict'])
+                self.resume_record = checkpoint.get('record', 0) # <--- Grab the record
+            else:
+                # Fallback for your old models
+                self.model.load_state_dict(checkpoint)
+                self.target_model.load_state_dict(checkpoint)
+                self.resume_record = 0
+                
             self.model.eval()
             self.n_games = settings.EPSILON_MEMORY_LOAD
-            print(f">> Success! Resuming from approx game {self.n_games}")
+            print(f">> Success! Resumed. Previous Record: {self.resume_record}")
+        else:
+            self.resume_record = 0 # Default if no file
 
     # --- VISION SYSTEM (Raycasts) ---
     def _get_vision_state(self, game, snake):

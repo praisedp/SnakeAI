@@ -38,13 +38,19 @@ class Linear_QNet(nn.Module):
         x = self.output(x)
         return x
 
-    def save(self, file_name='model.pth'):
+    def save(self, file_name='model.pth', record=0): # <--- Add record arg
         model_folder_path = './models'
         if not os.path.exists(model_folder_path):
             os.makedirs(model_folder_path)
 
         file_name = os.path.join(model_folder_path, file_name)
-        torch.save(self.state_dict(), file_name)
+        
+        # Save a Dictionary containing weights AND the record
+        checkpoint = {
+            'state_dict': self.state_dict(),
+            'record': record
+        }
+        torch.save(checkpoint, file_name)
 
 
 class QTrainer:

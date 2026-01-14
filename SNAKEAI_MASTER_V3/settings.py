@@ -19,8 +19,8 @@ PLOT_DESCRIPTION = "Solid Line = Score | Dotted Line = Mean Score"
 
 # --- DIMENSIONS & GRAPHICS ---
 BLOCK_SIZE = 20
-WIDTH = 400                   # Map Width (Must be multiple of BLOCK_SIZE)
-HEIGHT = 400                  # Map Height (Must be multiple of BLOCK_SIZE)
+WIDTH = 600                   # Map Width (Must be multiple of BLOCK_SIZE)
+HEIGHT = 600                  # Map Height (Must be multiple of BLOCK_SIZE)
 COLOR_FOOD = (200, 0, 0)  # Red
 
 # Colors (R, G, B)
@@ -28,14 +28,15 @@ COLOR_BG = (0, 0, 0)          # Black Background
 COLOR_TEXT = (255, 255, 255)  # White Text
 GREEN = (0, 200, 0)
 BLUE = (0, 0, 200)
-
+RED = (200, 0, 0)
+DARK_RED = (128, 0, 0)
 # --- MULTI-AGENT SETUP ---
 # Defining the roster of agents. 
 # For now, keep it to 1 until you refactor game.py completely.
 AGENTS = [
     {
         "name": "Viper", 
-        "color": BLUE   
+        "color": DARK_RED   
     },
     # Future Agents (Uncomment when multi-agent logic is ready):
     # {
@@ -56,7 +57,7 @@ TARGET_UPDATE_SIZE = 100      # Number of games take to update the Target NN
 # --- EXPLORATION (Epsilon) ---
 # Randomness logic: Epsilon = START - (n_games // DECAY)
 EPSILON_START = 100            # Initial randomness % (e.g. 100%)
-EPSILON_MIN = 2               # The "Floor" (Never go below n% random)
+EPSILON_MIN = 5               # The "Floor" (Never go below n% random)
 EPSILON_DECAY = 100            # Higher number = Slower decay (Longer exploration phase)
 EPSILON_MEMORY_LOAD = EPSILON_START * EPSILON_DECAY # Trick to reduce epsilon immediately when loading memory
 # EPSILON_MEMORY_LOAD = 4000
@@ -76,8 +77,8 @@ STACK_SIZE = 3               # How many frames to remember
 INPUT_SIZE = 38 * STACK_SIZE  
 HIDDEN_SIZE_0 = 512
 HIDDEN_SIZE_1 = 256           # First Hidden Layer
-HIDDEN_SIZE_2 = 128           # Second Hidden Layer
-HIDDEN_SIZE_3 = 64            # Third Hidden Layer
+# HIDDEN_SIZE_2 = 128           # Second Hidden Layer
+# HIDDEN_SIZE_3 = 64            # Third Hidden Layer
 OUTPUT_SIZE = 3               # [Straight, Right, Left]
 
 # TODO --- VISUALIZATION SETTINGS ---

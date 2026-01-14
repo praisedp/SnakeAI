@@ -129,19 +129,30 @@ class SnakeGameAI:
         self.frame_iteration = 0
 
     def _create_agents(self):
-        """Instantiates SnakeEntity objects based on settings.AGENTS config."""
+        """Instantiates SnakeEntity objects at random, non-overlapping positions."""
         self.snakes = []
-        for i, agent_conf in enumerate(settings.AGENTS):
-            
-            # Calculate grid-aligned spawn position
-            mid_x = self.w // 2
-            mid_y = self.h // 2
-            start_x = (mid_x // settings.BLOCK_SIZE) * settings.BLOCK_SIZE
-            start_y = (mid_y // settings.BLOCK_SIZE) * settings.BLOCK_SIZE
-            
-            # Apply Vertical Offset for multiple snakes so they don't spawn on top of each other
-            offset = i * 2 * settings.BLOCK_SIZE
-            start_y = ((start_y + offset) % self.h // settings.BLOCK_SIZE) * settings.BLOCK_SIZE
+
+        # Calculate grid limits so we stay inside bounds with a one-block buffer
+        rows = (self.h // settings.BLOCK_SIZE) - 1
+        cols = (self.w // settings.BLOCK_SIZE) - 1
+
+        for agent_conf in settings.AGENTS:
+            while True:
+                # Pick a random grid-aligned spot with room for the tail
+                x = random.randint(2, cols - 1) * settings.BLOCK_SIZE
+                y = random.randint(1, rows - 1) * settings.BLOCK_SIZE
+
+                # Keep heads separated to reduce instant collisions
+                valid_spot = True
+                for other in self.snakes:
+                    dist = abs(x - other.head.x) + abs(y - other.head.y)
+                    if dist < 5 * settings.BLOCK_SIZE:
+                        valid_spot = False
+                        break
+
+                if valid_spot:
+                    start_x, start_y = x, y
+                    break
 
             new_snake = SnakeEntity(
                 name=agent_conf["name"], 
@@ -382,7 +393,13 @@ class SnakeGameAI:
             # Optional: Draw Eyes
             if i == 0:
                 center = settings.BLOCK_SIZE // 2
-                pygame.draw.circle(self.display, (0,0,0), (int(pt.x+center), int(pt.y+center)), 3)
+                pygame.draw.circle(self.display, (0,0,0), (int(pt.x+center), int(pt.y+center)), 3.5)
+            # if i == 1:
+            #     center = settings.BLOCK_SIZE // 2
+            #     pygame.draw.circle(self.display, (0,0,0), (int(pt.x+center), int(pt.y+center)), 4)
+            # if i == 2:
+            #     center = settings.BLOCK_SIZE // 2
+            #     pygame.draw.circle(self.display, (0,0,0), (int(pt.x+center), int(pt.y+center)), 3)
 
     def _draw_score(self):
         text_str = " | ".join([f"{s.name}: {s.score}" for s in self.snakes])

@@ -16,10 +16,10 @@ class Linear_QNet(nn.Module):
         self.linear2 = nn.Linear(settings.HIDDEN_SIZE_0, settings.HIDDEN_SIZE_1)
         
         # Layer 3: Hidden -> Hidden
-        self.linear3 = nn.Linear(settings.HIDDEN_SIZE_1, settings.HIDDEN_SIZE_2)
+        # self.linear3 = nn.Linear(settings.HIDDEN_SIZE_1, settings.HIDDEN_SIZE_2)
         
         # Layer 4: Hidden -> Output (Action)
-        self.output = nn.Linear(settings.HIDDEN_SIZE_2, settings.OUTPUT_SIZE)
+        self.output = nn.Linear(settings.HIDDEN_SIZE_1, settings.OUTPUT_SIZE)
 
         # Move model to the correct device (GPU/CPU) immediately
         self.to(settings.DEVICE)
@@ -32,19 +32,25 @@ class Linear_QNet(nn.Module):
         x = F.relu(self.linear2(x))
         
         # 3. Second Hidden Layer + Relu
-        x = F.relu(self.linear3(x))
+        # x = F.relu(self.linear3(x))
         
         # 4. Output Layer (Raw Q-Values, no activation)
         x = self.output(x)
         return x
 
-    def save(self, file_name='model.pth'):
+    def save(self, file_name='model.pth', record=0): # <--- Add record arg
         model_folder_path = './models'
         if not os.path.exists(model_folder_path):
             os.makedirs(model_folder_path)
 
         file_name = os.path.join(model_folder_path, file_name)
-        torch.save(self.state_dict(), file_name)
+        
+        # Save a Dictionary containing weights AND the record
+        checkpoint = {
+            'state_dict': self.state_dict(),
+            'record': record
+        }
+        torch.save(checkpoint, file_name)
 
 
 class QTrainer:

@@ -14,11 +14,13 @@ def train():
     scores = []
     mean_scores = []
     total_score = 0
-    record = 0
-
+    
     # 2. Initialize Components
     agent = Agent()
     game = SnakeGameAI()
+    
+    record = getattr(agent, 'resume_record', 0) # <--- IMPORTANT
+    print(f"Current Record to Beat: {record}")
 
     print(">>> Training Started. Press Ctrl+C to stop.")
 
@@ -92,7 +94,8 @@ def train():
             
             if match_high_score > record:
                 record = match_high_score
-                agent.model.save()
+                # Pass the NEW record to the save function
+                agent.model.save(record=record) 
                 print(f"NEW RECORD! {record}")
 
             # D. Logging & Plotting

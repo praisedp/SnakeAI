@@ -5,7 +5,7 @@ import torch
 # ==============================================================================
 
 # --- SYSTEM & FILES ---
-RENDER = True                 # NOTE: Set to False to speed up training (no GUI)
+RENDER = False                 # NOTE: Set to False to speed up training (no GUI)
 
 MODEL_PATH = './models/model.pth'
 STARVE_LIMIT = 80             # Steps allowed per body length before starvation
@@ -19,7 +19,7 @@ PLOT_DESCRIPTION = "Solid Line = Score | Dotted Line = Mean Score"
 
 # --- DIMENSIONS & GRAPHICS ---
 BLOCK_SIZE = 20
-WIDTH = 1200                   # Map Width (Must be multiple of BLOCK_SIZE)
+WIDTH = 800                   # Map Width (Must be multiple of BLOCK_SIZE)
 HEIGHT = 800                  # Map Height (Must be multiple of BLOCK_SIZE)
 COLOR_FOOD = (200, 0, 0)  # Red
 
@@ -43,23 +43,23 @@ AGENTS = [
         "name": "Python", 
         "color": BLUE  
     },
-    {
-        "name": "Cobra", 
-        "color": GREEN  
-    },
-    {
-        "name": "Rat Snake", 
-        "color": YELLOW  
-    }
+    # {
+    #     "name": "Cobra", 
+    #     "color": GREEN  
+    # },
+    # {
+    #     "name": "Rat Snake", 
+    #     "color": YELLOW  
+    # }
 ]
 
-NUM_FOOD = 5                  # How many apples exist on screen at once?
+NUM_FOOD = 3                  # How many apples exist on screen at once?
 
 # --- HYPERPARAMETERS ---
-MAX_MEMORY = 200_000          # Experience Replay Buffer Size
+MAX_MEMORY = 100_000          # Experience Replay Buffer Size
 BATCH_SIZE = 1000             # How many memories to train on per game
-LR = 0.001                    # Learning Rate (Stepsize for the brain)
-GAMMA = 0.90                   # Discount Factor (0.9 = cares about future, 0.1 = short sighted)
+LR = 0.0001                    # Learning Rate (Stepsize for the brain)
+GAMMA = 0.95                   # Discount Factor (0.9 = cares about future, 0.1 = short sighted)
 TARGET_UPDATE_SIZE = 100      # Number of games take to update the Target NN
 
 # --- EXPLORATION (Epsilon) ---
@@ -68,13 +68,13 @@ EPSILON_START = 100            # Initial randomness % (e.g. 100%)
 EPSILON_MIN = 5               # The "Floor" (Never go below n% random)
 EPSILON_DECAY = 100            # Higher number = Slower decay (Longer exploration phase)
 EPSILON_MEMORY_LOAD = EPSILON_START * EPSILON_DECAY # Trick to reduce epsilon immediately when loading memory
-# EPSILON_MEMORY_LOAD = 2000
+EPSILON_MEMORY_LOAD = 8500
 
 # --- REWARDS (The "Definition of Bad") ---
-REWARD_FOOD = 25
+REWARD_FOOD = 30
 REWARD_STEP = -0.01
 REWARD_KILL = 40  # Big bonus for taking out an enemy
-REWARD_COLLISION = -50
+REWARD_COLLISION = -100
 # Formula: final_penalty = REWARD_COLLISION - (score * REWARD_STARVE_MULTIPLIER)
 # Example at Score 50: -15 - (50 * 0.5) = -40 penalty
 REWARD_STARVE_MULTIPLIER = 0.5 
