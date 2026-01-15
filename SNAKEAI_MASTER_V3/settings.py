@@ -5,11 +5,12 @@ import torch
 # ==============================================================================
 
 # --- SYSTEM & FILES ---
-RENDER = False                 # NOTE: Set to False to speed up training (no GUI)
+RENDER = True
+                 # NOTE: Set to False to speed up training (no GUI)
 
 MODEL_PATH = './models/model.pth'
 STARVE_LIMIT = 80             # Steps allowed per body length before starvation
-SPEED = 20 if RENDER else 0    # Game speed (frames per sec). Use 0 for max speed.
+SPEED = 30 if RENDER else 0    # Game speed (frames per sec). Use 0 for max speed.
 
 LOAD_MODEL = True              # NOTE: This will Reduce randomness
 
@@ -18,9 +19,9 @@ PLOT_TITLE = "MASTER SNAKE V3 / FOOD SMELL / FRAMESTACKING / 38 x 3" # NOTE: Nam
 PLOT_DESCRIPTION = "Solid Line = Score | Dotted Line = Mean Score"
 
 # --- DIMENSIONS & GRAPHICS ---
-BLOCK_SIZE = 20
-WIDTH = 600                   # Map Width (Must be multiple of BLOCK_SIZE)
-HEIGHT = 600                  # Map Height (Must be multiple of BLOCK_SIZE)
+BLOCK_SIZE = 30
+WIDTH = 1200                   # Map Width (Must be multiple of BLOCK_SIZE)
+HEIGHT = 1200                  # Map Height (Must be multiple of BLOCK_SIZE)
 COLOR_FOOD = (200, 0, 0)  # Red
 
 # Colors (R, G, B)
@@ -36,7 +37,7 @@ DARK_RED = (128, 0, 0)
 AGENTS = [
     {
         "name": "Viper", 
-        "color": DARK_RED   
+        "color": BLUE   
     },
     # Future Agents (Uncomment when multi-agent logic is ready):
     # {
@@ -57,10 +58,10 @@ TARGET_UPDATE_SIZE = 100      # Number of games take to update the Target NN
 # --- EXPLORATION (Epsilon) ---
 # Randomness logic: Epsilon = START - (n_games // DECAY)
 EPSILON_START = 100            # Initial randomness % (e.g. 100%)
-EPSILON_MIN = 5               # The "Floor" (Never go below n% random)
-EPSILON_DECAY = 100            # Higher number = Slower decay (Longer exploration phase)
+EPSILON_MIN = 0               # The "Floor" (Never go below n% random)
+EPSILON_DECAY = 200            # Higher number = Slower decay (Longer exploration phase)
 EPSILON_MEMORY_LOAD = EPSILON_START * EPSILON_DECAY # Trick to reduce epsilon immediately when loading memory
-# EPSILON_MEMORY_LOAD = 4000
+# EPSILON_MEMORY_LOAD = 17000
 
 # --- REWARDS (The "Definition of Bad") ---
 REWARD_FOOD = 30
@@ -81,13 +82,36 @@ HIDDEN_SIZE_1 = 256           # First Hidden Layer
 # HIDDEN_SIZE_3 = 64            # Third Hidden Layer
 OUTPUT_SIZE = 3               # [Straight, Right, Left]
 
-# TODO --- VISUALIZATION SETTINGS ---
-VISUALIZE_NN = True      # Set to False to save FPS
-NN_X = 660               # Draw NN starting at x=660 (You might need to increase WIDTH)
-NN_Y = 50
-NN_WIDTH = 300
-NN_HEIGHT = 400
+# --- NN VISUALIZER CONFIG ---
+SHOW_VISUALIZER = True         # Master toggle
+VISUALIZE_INPUT_SLICE = True   # If True, only shows the latest 38 inputs (Live frame)
+                               # If False, shows all 114 inputs (Stacked frames)
+VIS_WIDTH = 1200
+VIS_HEIGHT = 1200
 
+# Now calculate the Visualizer's Position dynamically
+# It starts exactly where the Game Width ends (+ some padding)
+VIS_X_START = WIDTH + 40 
+VIS_Y_START = ((HEIGHT - VIS_HEIGHT) // 2) + 30
+
+VIS_CONFIG = {
+    "X": VIS_X_START,         # <--- Dynamic X Position
+    "Y": VIS_Y_START,         
+    "WIDTH": VIS_WIDTH,              
+    "HEIGHT": VIS_HEIGHT,             
+    "MAX_NODES": 38,
+    "NODE_RADIUS": 10,
+    "LAYER_SPACING": 100,      
+    "COLORS": {
+        "BG": (0, 0, 0),
+        "NODE_OFF": (0, 0, 0),
+        "NODE_ON": (0, 255, 0),
+        "NODE_NEG": (255, 0, 0),
+        "WEIGHT_POS": (0, 180, 0),
+        "WEIGHT_NEG": (180, 0, 0),
+        "TEXT": (200, 200, 200)
+    }
+}
 # --- DEVICE CONFIG ---
 # Automatically picks GPU (cuda/mps) if available, otherwise CPU
 DEVICE = 'cpu'

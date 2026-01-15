@@ -1,6 +1,7 @@
 import pygame
 import random
 import numpy as np
+from visualizer import NNVisualizer  # <--- Add this import
 from enum import Enum
 from collections import deque
 from collections import namedtuple
@@ -118,8 +119,26 @@ class SnakeGameAI:
         """Initializes the Pygame window if rendering is enabled."""
         self.w = settings.WIDTH
         self.h = settings.HEIGHT
+        
+        # Calculate Total Window Width
+        # If Visualizer is ON, we need: Game Width + Padding + Visualizer Width + Padding
+        if settings.RENDER and settings.SHOW_VISUALIZER:
+            # We use the config we just created in settings to be precise
+            panel_width = settings.VIS_CONFIG["WIDTH"]
+            padding = 40 # Extra space for margins
+            display_width = self.w + panel_width + padding
+        else:
+            display_width = self.w
+            
+        # Height is whichever is taller: The Game or The Visualizer
+        display_height = max(self.h, settings.VIS_CONFIG["HEIGHT"] + 40)
+
         if settings.RENDER:
-            self.display = pygame.display.set_mode((self.w, self.h))
+            self.display = pygame.display.set_mode((display_width, display_height))
+            pygame.display.set_caption('Snake AI - Battle Arena')
+
+        if settings.RENDER:
+            self.display = pygame.display.set_mode((display_width, display_height))
             pygame.display.set_caption('Snake AI - Battle Arena')
 
     def reset(self):
@@ -172,7 +191,7 @@ class SnakeGameAI:
     # ------------------------------------------------------------------
     # 2. MAIN GAME LOOP (The API)
     # ------------------------------------------------------------------
-    def play_step(self, actions, render=True, model=None):
+    def play_step(self, actions, render=True, visualizer=None): # <--- Added visualizer arg
         """
         Executes one frame of the game.
         Args:
@@ -191,7 +210,7 @@ class SnakeGameAI:
 
         # 5. Rendering
         if settings.RENDER and render:
-            self._update_ui(model)
+            self._update_ui(visualizer) 
             self.clock.tick(settings.SPEED)
 
         return rewards, dones, [s.score for s in self.snakes]
@@ -355,7 +374,7 @@ class SnakeGameAI:
     # ------------------------------------------------------------------
     # 5. RENDERING HELPERS
     # ------------------------------------------------------------------
-    def _update_ui(self, model=None):
+    def _update_ui(self, visualizer=None):
         self.display.fill(settings.COLOR_BG)
 
         # Draw Snakes
@@ -375,10 +394,9 @@ class SnakeGameAI:
         self._draw_score()
         
         # (Future Place for NN Visualizer)
-        if model and settings.VISUALIZE_NN:
-            # self._draw_nn(model) 
-            pass
-
+        if visualizer and settings.SHOW_VISUALIZER: # <--- Added logic
+            visualizer.draw(self.display)
+            
         pygame.display.flip()
 
     def _draw_snake(self, snake):
@@ -393,7 +411,7 @@ class SnakeGameAI:
             # Optional: Draw Eyes
             if i == 0:
                 center = settings.BLOCK_SIZE // 2
-                pygame.draw.circle(self.display, (0,0,0), (int(pt.x+center), int(pt.y+center)), 3.5)
+                pygame.draw.circle(self.display, (0,0,0), (int(pt.x+center), int(pt.y+center)), 5)
             # if i == 1:
             #     center = settings.BLOCK_SIZE // 2
             #     pygame.draw.circle(self.display, (0,0,0), (int(pt.x+center), int(pt.y+center)), 4)

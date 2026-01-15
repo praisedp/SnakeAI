@@ -50,7 +50,6 @@ class Agent:
         if random.randint(0, 100) < self.epsilon:
             move = random.randint(0, 2)
         else:
-            # We predict based on the Stacked State (96 inputs)
             state_t = torch.tensor(state, dtype=torch.float).to(settings.DEVICE).unsqueeze(0)
             prediction = self.model(state_t)
             move = torch.argmax(prediction).item()

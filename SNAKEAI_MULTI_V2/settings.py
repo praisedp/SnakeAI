@@ -5,7 +5,7 @@ import torch
 # ==============================================================================
 
 # --- SYSTEM & FILES ---
-RENDER = False                 # NOTE: Set to False to speed up training (no GUI)
+RENDER = True                 # NOTE: Set to False to speed up training (no GUI)
 
 MODEL_PATH = './models/model.pth'
 STARVE_LIMIT = 80             # Steps allowed per body length before starvation
@@ -65,10 +65,10 @@ TARGET_UPDATE_SIZE = 100      # Number of games take to update the Target NN
 # --- EXPLORATION (Epsilon) ---
 # Randomness logic: Epsilon = START - (n_games // DECAY)
 EPSILON_START = 100            # Initial randomness % (e.g. 100%)
-EPSILON_MIN = 5               # The "Floor" (Never go below n% random)
-EPSILON_DECAY = 100            # Higher number = Slower decay (Longer exploration phase)
+EPSILON_MIN = 0               # The "Floor" (Never go below n% random)
+EPSILON_DECAY = 200            # Higher number = Slower decay (Longer exploration phase)
 EPSILON_MEMORY_LOAD = EPSILON_START * EPSILON_DECAY # Trick to reduce epsilon immediately when loading memory
-EPSILON_MEMORY_LOAD = 8500
+# EPSILON_MEMORY_LOAD = 16000
 
 # --- REWARDS (The "Definition of Bad") ---
 REWARD_FOOD = 30
